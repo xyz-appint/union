@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.appint.user.dao.CoreUserDAO">
+
+    <select id="isExists" parameterType="string" resultType="integer">
+        SELECT COUNT(*) FROM core_user WHERE username = #{username}
+    </select>
+
+    <select id="isExistsOpenid" parameterType="string" resultType="integer">
+        SELECT COUNT(*) FROM core_user WHERE openid = #{openid}
+    </select>
+
+    <select id="queryUserByUsername" parameterType="string" resultType="CoreUser">
+        SELECT uid, username, score, level_score , level_title, status, openid, updated_time
+        FROM core_user
+        WHERE username = #{username}
+    </select>
+
+    <select id="queryUserByUid" parameterType="int" resultType="CoreUser">
+        SELECT uid, username, score, level_score , level_title, status, openid, updated_time
+        FROM core_user
+        WHERE uid = #{uid}
+    </select>
+
+    <select id="countByDate" parameterType="string" resultType="integer">
+        SELECT COUNT(*)
+        FROM core_user
+        WHERE created_time = #{username}
+    </select>
+
+    <select id="queryUserByUsernameAndPassword" parameterType="map" resultType="CoreUser">
+        SELECT uid, username, score, level_score , level_title , status, openid , is_mentor, updated_time
+        FROM core_user
+        WHERE username = #{0} AND password = #{1}
+    </select>
+
+    <insert id="register" parameterType="CoreUser" useGeneratedKeys="true" keyColumn="uid" keyProperty="uid">
+        INSERT INTO core_user (
+        uid,
+        username,
+        password,
+        score,
+        level_score,
+        level_title,
+        status,
+        last_login_time,
+        last_login_ip,
+        openid,
+        is_robot,
+        is_mentor,
+        created_time,
+        updated_time
+        )
+        VALUES
+        (
+        #{uid},
+        #{username},
+        #{password},
+        #{score},
+        #{levelScore},
+        #{levelTitle},
+        #{status},
+        #{lastLoginTime},
+        #{lastLoginIp},
+        #{openid},
+        #{isRobot},
+        #{isMentor},
+        #{createdTime},
+        #{updatedTime}
+        )
+    </insert>
+
+    <update id="updatePassword" parameterType="map">
+        UPDATE core_user SET password = #{1} WHERE username = #{0}
+    </update>
+
+    <update id="updateLastLogin" parameterType="map">
+        UPDATE core_user SET last_login_ip = #{1} , last_login_time = #{2} WHERE username = #{0}
+    </update>
+
+
+    <update id="updateStatus" parameterType="map">
+        UPDATE core_user SET status = #{1} WHERE uid = #{0}
+    </update>
+
+    <update id="updateScore" parameterType="map">
+        UPDATE core_user SET score = score + #{score} , level_score = level_score + #{score} WHERE uid = #{uid}
+    </update>
+
+    <update id="updateMentor" parameterType="map">
+        UPDATE core_user SET is_mentor = #{isMentor} WHERE uid = #{uid}
+    </update>
+
+    <select id="queryLevelTitleByUid" parameterType="integer" resultType="string">
+        SELECT level_title
+        FROM core_user
+        WHERE uid = #{uid}
+    </select>
+
+    <select id="countPostsByUid" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM posts WHERE uid = #{uid} AND post_status = 0
+    </select>
+
+    <select id="queryMaxUid" resultType="int">
+        SELECT MAX(uid) FROM core_user
+    </select>
+
+</mapper>

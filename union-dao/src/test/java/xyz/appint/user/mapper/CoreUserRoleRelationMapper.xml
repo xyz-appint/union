@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.appint.chase.user.dao.CoreUserRoleRelationDAO">
+
+    <select id="isExists" parameterType="integer" resultType="integer">
+        SELECT COUNT(*) FROM core_user_role_relation WHERE role_id = #{roleId} AND uid = #{uid}
+    </select>
+
+
+    <insert id="add" parameterType="CoreUserRoleRelation">
+        INSERT INTO core_user_role_relation(role_id , uid)
+        VALUES (#{roleId}, #{uid})
+    </insert>
+
+    <update id="deleteRoleRelation" parameterType="CoreUserRoleRelation">
+        DELETE FROM core_user_role_relation WHERE role_id = #{roleId} AND uid = #{uid}
+    </update>
+
+    <select id="queryRoleListByUid" parameterType="integer" resultType="String">
+        SELECT role_id FROM core_user_role_relation WHERE uid = #{uid}
+    </select>
+
+</mapper>

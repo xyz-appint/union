@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+     		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+
+     http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd   http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
+
+    <context:annotation-config/>
+
+    <context:component-scan base-package="xyz.appint.*">
+    </context:component-scan>
+
+    <tx:annotation-driven/>
+
+
+    <jdbc:embedded-database id="dataSource" type="HSQL">
+        <jdbc:script location="classpath:/db.sql"/>
+    </jdbc:embedded-database>
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean id="mybatisDao" class="xyz.appint.union.dao.dao.MybatisDao">
+        <property name="writerDataSource" ref="dataSource"/>
+        <!--
+        <property name="readerSession" ref="readerSqlSession" />
+        <property name="writerSession" ref="writerSqlSession" />
+        -->
+    </bean>
+
+    <bean id="paginationInterceptor" class="xyz.appint.union.dao.dao.PaginationInterceptor"/>
+
+    <bean id="writerSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="typeAliasesPackage" value="com.zuoyouxuan.entity"/>
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+
+        <property name="mapperLocations" value="classpath:xyz/appint/mapper/*.xml"/>
+        <property name="plugins">
+            <list>
+                <ref bean="paginationInterceptor"/>
+            </list>
+        </property>
+    </bean>
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate" scope="prototype">
+        <constructor-arg index="0" ref="writerSqlSessionFactory"/>
+    </bean>
+
+    <bean id="myBatisPagingItemReader" class="org.mybatis.spring.batch.MyBatisPagingItemReader">
+        <property name="sqlSessionFactory" ref="writerSqlSessionFactory"/>
+        <property name="queryId" value="INIT"/>
+    </bean>
+    <!--
+    <bean id="readSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="typeAliasesPackage" value="cn.yunlai.yunquan.entity"/>
+        <property name="mapperLocations" value="classpath:cn/yunlai/yunquan/mapper/*.xml"/>
+        <property name="plugins">
+            <list>
+                <ref bean="paginationInterceptor" />
+            </list>
+        </property>
+    </bean>
+    <bean id="readerSqlSession" class="org.mybatis.spring.SqlSessionTemplate" scope="prototype">
+        <constructor-arg index="0" ref="readSqlSessionFactory"/>
+    </bean>
+    -->
+    <!-- 自动扫描mappers，并注入
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="cn.yunlai.yunquan.mapper"/>
+        <property name="sqlSessionFactoryBeanName" value="writerSqlSessionFactory"/>
+    </bean>
+    -->
+
+    <!-- 事务配置 -->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <tx:annotation-driven transaction-manager="txManager"/>
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <tx:method name="save*" propagation="REQUIRED"/>
+            <tx:method name="add*" propagation="REQUIRED"/>
+            <tx:method name="create*" propagation="REQUIRED"/>
+            <tx:method name="insert*" propagation="REQUIRED"/>
+            <tx:method name="update*" propagation="REQUIRED"/>
+            <tx:method name="merge*" propagation="REQUIRED"/>
+            <tx:method name="del*" propagation="REQUIRED"/>
+            <tx:method name="remove*" propagation="REQUIRED"/>
+            <tx:method name="put*" propagation="REQUIRED"/>
+            <tx:method name="use*" propagation="REQUIRED"/>
+            <tx:method name="get*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="read*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="query*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="count*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="find*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="list*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="test*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="del*" propagation="REQUIRED"/>
+            <tx:method name="bulk*" propagation="REQUIRED"/>
+            <tx:method name="reset*" propagation="REQUIRED"/>
+            <tx:method name="push*" propagation="REQUIRED"/>
+            <tx:method name="login*" propagation="REQUIRED"/>
+            <tx:method name="identify*" propagation="REQUIRED"/>
+            <tx:method name="batch*" propagation="REQUIRED"/>
+            <tx:method name="*" propagation="REQUIRED" read-only="false"/>
+        </tx:attributes>
+    </tx:advice>
+
+
+    <aop:config>
+        <!-- 业务逻辑层 -->
+        <aop:pointcut id="txPointcut"
+                      expression="execution(* xyz.appint..service..*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut"/>
+    </aop:config>
+
+
+</beans>

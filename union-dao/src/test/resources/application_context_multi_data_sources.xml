@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.0.xsd">
+
+
+    <context:property-placeholder
+            ignore-unresolvable="true" location="classpath*:db.properties"/>
+
+
+    <bean id="dataSource" class="xyz.appint.union.dao.datasource.RoutingDataSource">
+        <property name="targetDataSources">
+            <map key-type="xyz.appint.union.dao.datasource.DataSourceType">
+                <entry key="WRITE" value-ref="writeDataSource"/>
+                <entry key="READ" value-ref="readDataSource"/>
+            </map>
+        </property>
+        <property name="defaultTargetDataSource" ref="writeDataSource"/>
+    </bean>
+
+    <bean id="parentDataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${db.driverClassName}"/>
+        <property name="username" value="${db.username}"/>
+        <property name="password" value="${db.password}"/>
+        <!-- 配置初始化大小、最小、最大 -->
+        <property name="initialSize" value="${db.initialSize}"/>
+        <property name="minIdle" value="${db.minIdle}"/>
+        <property name="maxActive" value="${db.maxActive}"/>
+
+        <!-- 配置获取连接等待超时的时间 单位是毫秒 -->
+        <property name="maxWait" value="${db.maxWait}"/>
+
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="${db.timeBetweenEvictionRunsMillis}"/>
+
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="${db.minEvictableIdleTimeMillis}"/>
+        <!-- 验证连接的语句 -->
+        <property name="validationQuery" value="${db.validationQuery}"/>
+        <property name="testWhileIdle" value="${db.testWhileIdle}"/>
+        <property name="testOnBorrow" value="${db.testOnBorrow}"/>
+        <property name="testOnReturn" value="${db.testOnReturn}"/>
+
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+        <property name="poolPreparedStatements" value="${db.poolPreparedStatements}"/>
+        <property name="maxPoolPreparedStatementPerConnectionSize"
+                  value="${db.maxPoolPreparedStatementPerConnectionSize}"/>
+
+        <!-- 配置监控统计拦截的filters <property name="filters" value="${db.filters}" /> -->
+        <property name="filters" value="${db.filters}"/>
+    </bean>
+
+    <!-- 数据源 -->
+    <bean id="writeDataSource" parent="parentDataSource" init-method="init" destroy-method="close">
+        <!-- 基本属性 url、user、password -->
+        <property name="url" value="${db.url}"/>
+
+    </bean>
+    <bean id="readDataSource" parent="parentDataSource" init-method="init" destroy-method="close">
+        <!-- 基本属性 url、user、password -->
+        <property name="url" value="${db.read.url}"/>
+    </bean>
+
+    <bean id="paginationInterceptor" class="xyz.appint.union.dao.dao.PaginationInterceptor"/>
+
+
+    <bean id="writerSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="typeAliasesPackage" value="xyz.appint.chase.core.entity"/>
+        <property name="mapperLocations"
+                  value="classpath*:xyz/appint/**/mapper/**/*.xml"/>
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+        <property name="plugins">
+            <list>
+                <ref bean="paginationInterceptor"/>
+            </list>
+        </property>
+    </bean>
+
+
+    <bean id="mybatisDao" class="xyz.appint.union.dao.dao.MybatisDao">
+        <property name="sqlSessionFactory" ref="writerSqlSessionFactory"/>
+    </bean>
+
+    <!--<bean id="writerSqlSession" class="org.mybatis.spring.SqlSessionTemplate">-->
+    <!--<constructor-arg index="0" ref="writerSqlSessionFactory"/>-->
+    <!--</bean>-->
+
+    <bean id="dataSourceInterceptor" class="xyz.appint.union.dao.datasource.DataSourceInterceptor"/>
+    <aop:config proxy-target-class="true">
+        <aop:aspect ref="dataSourceInterceptor">
+            <aop:pointcut id="update"
+                          expression="execution(* xyz.appint.union.dao.dao.MybatisDao.update*(..))
+                          || execution(* org.mybatis.spring.SqlSessionTemplate.insert(..))
+                          || execution(* org.mybatis.spring.SqlSessionTemplate.delete(..))"/>
+            <aop:before method="setWriteDataSource"
+                        pointcut-ref="update"/>
+        </aop:aspect>
+        <aop:aspect ref="dataSourceInterceptor">
+            <aop:before method="setReadDataSource"
+                        pointcut="@annotation(xyz.appint.union.dao.dao.annotation.Col)
+                        || execution(* xyz.appint.union.dao.dao.MybatisDao.query*(..))"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!--&lt;!&ndash; 事务配置 &ndash;&gt;-->
+    <bean id="txManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+    <context:annotation-config/>
+    <!-- 使用annotation 自动注册bean, 并保证@Required、@Autowired的属性被注入 -->
+    <context:component-scan base-package="com.zuoyouxuan">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+    <!--<tx:annotation-driven transaction-manager="txManager" order="9999"/>-->
+
+    <!--<tx:advice id="txAdvice" transaction-manager="txManager">-->
+    <!--<tx:attributes>-->
+    <!--<tx:method name="save*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="add*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="create*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="insert*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="update*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="merge*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="del*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="remove*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="put*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="use*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="reg*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="get*" propagation="REQUIRED" read-only="true"/>-->
+    <!--<tx:method name="read*" propagation="REQUIRED" read-only="true"/>-->
+    <!--<tx:method name="query*" propagation="REQUIRED" read-only="true"/>-->
+    <!--<tx:method name="count*" propagation="REQUIRED" read-only="true"/>-->
+    <!--<tx:method name="find*" propagation="REQUIRED" read-only="true"/>-->
+    <!--<tx:method name="list*" propagation="REQUIRED" read-only="true"/>-->
+    <!--<tx:method name="test*" propagation="REQUIRED" read-only="true"/>-->
+    <!--<tx:method name="del*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="bulk*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="reset*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="push*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="login*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="identify*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="batch*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="increase*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="increment*" propagation="REQUIRED"/>-->
+    <!--<tx:method name="*" propagation="REQUIRED" read-only="true"/>-->
+    <!--</tx:attributes>-->
+    <!--</tx:advice>-->
+
+    <!--<bean id="myBatisBatchItemWriter" class="org.mybatis.spring.batch.MyBatisBatchItemWriter">-->
+    <!--<property name="sqlSessionFactory" ref="writerSqlSessionFactory" />-->
+    <!--<property name="statementId" value="CoreUserDAO.register" />-->
+    <!--</bean>-->
+
+
+    <!--<aop:config>-->
+    <!--&lt;!&ndash; 业务逻辑层 &ndash;&gt;-->
+    <!--<aop:pointcut id="txPointcut"-->
+    <!--expression="execution(* com.appint..*(..))"/>-->
+    <!--<aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut"/>-->
+    <!--</aop:config>-->
+
+
+    <task:annotation-driven executor="myExecutor" scheduler="myScheduler"/>
+    <task:executor id="myExecutor" pool-size="5"/>
+    <task:scheduler id="myScheduler" pool-size="10"/>
+
+
+</beans>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.appint.chase.user.dao.CoreUserRelationDAO">
+
+    <select id="queryFollowingPage" parameterType="map" resultType="UserBaseProfile">
+        SELECT a.status AS follow_status , a.updated_time , b.uid , b.nickname , gender , avatar , company,intro FROM
+        core_user_following a
+        INNER JOIN core_user_profile b ON a.following_uid = b.uid
+        WHERE a.uid = #{uid}
+        <choose>
+            <when test="ts != null">
+                AND a.updated_time > #{ts}
+            </when>
+            <otherwise>
+                AND a.status = 0
+            </otherwise>
+        </choose>
+        ORDER BY a.updated_time DESC
+    </select>
+
+    <select id="queryFollowerPage" parameterType="map" resultType="UserBaseProfile">
+        SELECT a.status AS follow_status , a.updated_time , b.uid , b.nickname , gender , avatar , company,intro
+        FROM core_user_follower a
+        INNER JOIN core_user_profile b ON a.follower_uid = b.uid
+        WHERE a.uid = #{uid}
+        <choose>
+            <when test="ts != null">
+                AND a.updated_time > #{ts}
+            </when>
+            <otherwise>
+                AND a.status = 0
+            </otherwise>
+        </choose>
+        ORDER BY a.updated_time DESC
+    </select>
+
+
+</mapper>

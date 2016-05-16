@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.appint.dao.UserDAO">
+
+    <insert id="insert" parameterType="User" keyProperty="id" useGeneratedKeys="true">
+        insert into user(firstname,lastname,age,department_id) values (#{firstname},#{lastname},#{age} ,
+        #{department.id})
+    </insert>
+
+    <insert id="batchInsert" useGeneratedKeys="true" parameterType="list">
+        insert into user(firstname,lastname,age,department_id) values
+        <foreach collection="list" item="user" index="index" separator=",">
+            (#{user.firstname},#{user.lastname},#{user.age} , #{user.department.id})
+        </foreach>
+    </insert>
+
+    <update id="updateFirstNameByUid" parameterType="map">
+        UPDATE user SET firstname = #{firstName} WHERE id = #{id}
+    </update>
+
+    <select id="queryUsers" resultType="User">
+        SELECT * FROM user where id > #{id}
+    </select>
+
+    <select id="findLastnameByFirstname" parameterType="string" resultType="string">
+        SELECT lastname FROM user WHERE firstname = #{firstname}
+    </select>
+
+    <select id="list" parameterType="map" resultType="User">
+        SELECT * FROM user WHERE id &gt; #{0} and firstname like '%' || #{1} || '%'
+    </select>
+
+    <select id="findAll" parameterType="map" resultType="User">
+        SELECT * FROM user
+    </select>
+
+    <select id="findPage" parameterType="map" resultType="User">
+        select * from user u1 , user u2 where u1.id = u2.id and id &gt; #{id}
+    </select>
+
+    <select id="queryByIdAndName" resultType="User">
+        <bind name="pattern" value="'%' + #{p1} + '%'"/>
+        SELECT * FROM user WHERE id &gt; #{0} and firstname like '%' || #{1} || '%'
+    </select>
+
+    <select id="queryByName" resultType="User">
+        SELECT * FROM user WHERE firstname = #{name}
+    </select>
+
+    <select id="queryByNames" resultType="User" parameterType="map">
+        SELECT * FROM user WHERE firstname = #{firstName} and lastname = #{lastname}
+    </select>
+
+    <select id="queryByNamesNoCol" resultType="User" parameterType="map">
+        SELECT * FROM user WHERE firstname = #{0} and lastname = #{1}
+    </select>
+
+
+    <update id="update" parameterType="User">
+        update user
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="firstname != null and firstname != '' ">
+                firstname = #{firstname},
+            </if>
+            <if test="age != null">
+                age = #{age},
+            </if>
+            <if test="lastname != null and lastname != '' ">
+                lastname = #{lastname},
+            </if>
+            <if test="department != null and department.id != null ">
+                department_id = #{department.id},
+            </if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="integer">
+        DELETE FROM user WHERE id = #{value}
+    </delete>
+
+    <select id="count" parameterType="string" resultType="integer">
+        select count(*) from user
+    </select>
+
+    <select id="queryUid" parameterType="integer" resultType="integer">
+        select id from user WHERE id = #{id}
+    </select>
+
+    <select id="queryEscalatorPage" resultType="User">
+        SELECT * FROM id > 1
+    </select>
+</mapper>

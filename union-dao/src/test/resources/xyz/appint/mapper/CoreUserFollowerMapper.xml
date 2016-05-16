@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.appint.user.dao.CoreUserFollowerDAO">
+
+    <select id="isExists" parameterType="map" resultType="integer">
+        SELECT COUNT(*) FROM core_user_follower WHERE uid = #{0} AND follower_uid = #{1}
+    </select>
+
+    <insert id="save" parameterType="CoreUserFollower">
+        INSERT INTO core_user_follower (
+        uid,
+        follower_uid,
+        status,
+        created_time,
+        updated_time
+        )
+        VALUES
+        (
+        #{uid},
+        #{followerUid},
+        #{status},
+        #{createdTime},
+        #{updatedTime}
+        )
+    </insert>
+
+
+    <update id="updateFollowerStatus" parameterType="map">
+        UPDATE core_user_follower SET status = #{2} WHERE uid = #{0} AND follower_uid = #{1}
+    </update>
+
+    <select id="countByUid" parameterType="integer" resultType="integer">
+        SELECT COUNT(*) FROM core_user_follower WHERE uid = #{uid} AND status = 0
+    </select>
+
+</mapper>

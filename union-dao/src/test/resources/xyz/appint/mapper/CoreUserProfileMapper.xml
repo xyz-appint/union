@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.appint.user.dao.CoreUserProfileDAO">
+
+    <select id="isExists" parameterType="integer" resultType="integer">
+        SELECT COUNT(*) FROM core_user_profile WHERE uid = #{uid}
+    </select>
+
+
+    <insert id="save" parameterType="CoreUserProfile" useGeneratedKeys="true" keyColumn="uid" keyProperty="uid">
+        INSERT INTO core_user_profile (
+        uid,
+        nickname,
+        gender,
+        avatar,
+        email,
+        company,
+        hometown_id,
+        residence_id,
+        birthday,
+        phone_number,
+        qq_number,
+        intro,
+        record,
+        created_time,
+        updated_time
+        )
+        VALUES
+        (
+        #{uid},
+        #{nickname},
+        #{gender},
+        #{avatar},
+        #{email},
+        #{company},
+        #{hometownId},
+        #{residenceId},
+        #{birthday},
+        #{phoneNumber},
+        #{qqNumber},
+        #{intro},
+        #{record},
+        #{createdTime},
+        #{updatedTime}
+        )
+    </insert>
+
+    <update id="updateUserProfile" parameterType="CoreUserProfile">
+        UPDATE
+        core_user_profile
+        <set>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="gender > 0">gender=#{gender},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="company != null">company = #{company},</if>
+            <if test="hometownId > 0">hometown_id = #{hometownId},</if>
+            <if test="residenceId > 0">residence_id = #{residenceId},</if>
+            <if test="birthday != null">birthday = #{birthday},</if>
+            <if test="company != null">phone_number = #{company},</if>
+            <if test="qqNumber != null">qq_number = #{qqNumber},</if>
+            <if test="intro != null">intro = #{intro},</if>
+            <if test="record != null">record = #{record},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime}</if>
+        </set>
+        WHERE uid = #{uid}
+    </update>
+
+
+    <update id="updateUserAvatar" parameterType="map">
+        UPDATE core_user_profile SET avatar = #{1} WHERE uid = #{0}
+    </update>
+
+    <update id="updateSingleField" parameterType="map">
+        UPDATE core_user_profile SET ${field} = #{val} WHERE uid = #{uid}
+    </update>
+
+    <select id="queryBaseProfileByUid" parameterType="integer" resultType="CoreUserProfile">
+        SELECT
+        uid,
+        nickname,
+        gender,
+        avatar,
+        email,
+        company
+        FROM core_user_profile
+        WHERE uid = #{uid}
+    </select>
+
+    <select id="queryUserProfileByUids" parameterType="map" resultType="CoreUserProfile">
+        SELECT
+        uid,
+        nickname,
+        gender,
+        avatar,
+        company
+        FROM core_user_profile
+        WHERE uid IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryProfileByUid" parameterType="map" resultType="CoreUserProfile">
+        SELECT
+        uid,
+        nickname,
+        gender,
+        avatar,
+        email,
+        company,
+        hometown_id,
+        residence_id,
+        birthday,
+        phone_number,
+        qq_number,
+        intro,
+        record,
+        created_time,
+        updated_time
+        FROM
+        core_user_profile
+        WHERE uid = #{uid}
+        <if test="ts!=null">
+            AND updated_time > #{ts}
+        </if>
+    </select>
+
+    <select id="queryRobotUserPage" parameterType="map" resultType="CoreUserProfile">
+        SELECT
+        a.uid,
+        a.nickname,
+        a.gender,
+        a.avatar,
+        a.email,
+        a.company,
+        a.hometown_id,
+        a.residence_id,
+        a.birthday,
+        a.phone_number,
+        a.qq_number,
+        a.intro,
+        a.created_time,
+        a.updated_time,
+        b.username,
+        b.is_mentor
+        FROM
+        core_user_profile a
+        INNER JOIN core_user b ON a.uid = b.uid
+        WHERE b.status = 1
+        <if test="queryString != null">
+            AND (a.nickname like '%${queryString}%' or username like '%${queryString}%')
+        </if>
+        <if test="isMentor > -1">
+            AND b.is_mentor = #{isMentor}
+        </if>
+        ORDER BY a.updated_time DESC
+    </select>
+
+    <select id="queryAllRobotUser" resultType="CoreUserProfile">
+        SELECT
+        a.uid,
+        a.nickname,
+        b.username
+        FROM
+        core_user_profile a
+        INNER JOIN core_user b ON a.uid = b.uid
+        WHERE b.is_robot = 1 AND b.status = 1
+        ORDER BY a.uid DESC
+    </select>
+
+    <select id="queryNameByUid" resultType="string">
+        SELECT
+        nickname
+        FROM
+        core_user_profile
+        WHERE uid = #{uid}
+    </select>
+
+
+</mapper>

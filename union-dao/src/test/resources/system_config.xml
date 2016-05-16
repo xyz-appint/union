@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configuration>
+    <system>
+        <resetPassword>888888</resetPassword>
+        <staticRes>true</staticRes>
+        <serverURL>http://192.168.1.107</serverURL>
+    </system>
+    <debug>true</debug>
+    <test>测试</test>
+    <res>
+        <default>http://192.168.1.107:8080</default>
+        <css>http://192.168.1.107:8080</css>
+        <js>http://192.168.1.107:8080</js>
+    </res>
+    <list>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </list>
+
+    <level>
+        <l_0>平民</l_0>
+        <l_1>兵卒</l_1>
+        <l_2>屯长</l_2>
+        <l_3>军侯</l_3>
+        <l_4>军司马</l_4>
+        <l_5>都尉</l_5>
+        <l_6>校尉</l_6>
+        <l_7>中郎将</l_7>
+        <l_8>裨将军</l_8>
+        <l_9>偏将军</l_9>
+        <l_10>牙门将军</l_10>
+        <l_11>伏波将军</l_11>
+        <l_12>翊武将军</l_12>
+        <l_13>翊师将军</l_13>
+        <l_14>建威将军</l_14>
+        <l_15>镇国将军</l_15>
+        <l_16>前将军</l_16>
+        <l_17>后将军</l_17>
+        <l_18>左将军</l_18>
+        <l_19>右将军</l_19>
+        <l_20>骠骑将军</l_20>
+        <l_21>车骑将军</l_21>
+        <l_22>卫将军</l_22>
+        <l_23>安国将军</l_23>
+        <l_24>大将军</l_24>
+    </level>
+</configuration>

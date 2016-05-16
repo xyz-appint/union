@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.appint.user.dao.CoreUserFollowingDAO">
+
+    <select id="isExists" parameterType="map" resultType="integer">
+        SELECT COUNT(*) FROM core_user_following WHERE uid = #{0} AND following_uid = #{1}
+    </select>
+
+    <select id="isFollowing" parameterType="map" resultType="integer">
+        SELECT COUNT(*) FROM core_user_following WHERE uid = #{fromUid} AND following_uid = #{uid} AND status = 0
+    </select>
+
+    <insert id="save" parameterType="CoreUserFollowing">
+        INSERT INTO core_user_following (
+        uid,
+        following_uid,
+        status,
+        created_time,
+        updated_time
+        )
+        VALUES
+        (
+        #{uid},
+        #{followingUid},
+        #{status},
+        #{createdTime},
+        #{updatedTime}
+        )
+    </insert>
+
+
+    <update id="updateFollowingStatus" parameterType="map">
+        UPDATE core_user_following SET status = #{2} WHERE uid = #{0} AND following_uid = #{1}
+    </update>
+
+    <select id="countByUid" parameterType="integer" resultType="integer">
+        SELECT COUNT(*) FROM core_user_following WHERE uid = #{uid} AND status = 0
+    </select>
+
+
+</mapper>
