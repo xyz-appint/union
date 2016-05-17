@@ -117,9 +117,6 @@ public class PaginationInterceptor implements Interceptor {
 
     public String getPageSql(String sql, RowBounds rowBounds) {
         StringBuilder pageSql = new StringBuilder();
-        if (rowBounds.getLimit() == 0) {
-            return pageSql.toString();
-        }
         pageSql.append(sql);
         pageSql.append(" LIMIT ");
         if (rowBounds.getOffset() > 0) {
