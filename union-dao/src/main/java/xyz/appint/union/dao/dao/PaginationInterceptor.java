@@ -86,7 +86,6 @@ public class PaginationInterceptor implements Interceptor {
     }
 
 
-
     @Deprecated
     private MappedStatement copyFromMappedStatement(MappedStatement ms, SqlSource newSqlSource) {
         MappedStatement.Builder builder = new MappedStatement.Builder(ms.getConfiguration(), ms.getId(), newSqlSource, ms.getSqlCommandType());
@@ -118,13 +117,16 @@ public class PaginationInterceptor implements Interceptor {
 
     public String getPageSql(String sql, RowBounds rowBounds) {
         StringBuilder pageSql = new StringBuilder();
+        if (rowBounds.getLimit() == 0) {
+            return pageSql.toString();
+        }
         pageSql.append(sql);
         pageSql.append(" LIMIT ");
-        if(rowBounds.getOffset() > 0) {
+        if (rowBounds.getOffset() > 0) {
             pageSql.append(rowBounds.getOffset());
             pageSql.append(" , ");
         }
-        pageSql.append(rowBounds.getLimit() );
+        pageSql.append(rowBounds.getLimit());
 
         return pageSql.toString();
     }
